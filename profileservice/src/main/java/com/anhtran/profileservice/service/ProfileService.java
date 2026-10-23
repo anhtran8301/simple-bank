@@ -27,7 +27,8 @@ public class ProfileService {
     public Flux<ProfileDTO> getAllProfile() {
         return profileRepository.findAll()
                 .map(ProfileDTO::entityToDto)
-                .switchIfEmpty(Mono.error(new Exception("PF02")));
+                .switchIfEmpty(Mono.error(new CommonException("PF01", "Empty profile list", HttpStatus.NOT_FOUND)));
+
     }
 
     public Mono<ProfileDTO> createNewProfile(ProfileDTO profileDTO) {

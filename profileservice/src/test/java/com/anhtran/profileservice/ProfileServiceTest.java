@@ -66,11 +66,14 @@ class ProfileServiceTest {
     }
 
     @Test
-    void getAllProfileFailsWithPf02WhenRepositoryIsEmpty() {
+    void getAllProfileFailsWhenRepositoryIsEmpty() {
         when(profileRepository.findAll()).thenReturn(Flux.empty());
 
         StepVerifier.create(profileService.getAllProfile())
-                .expectErrorMatches(error -> error instanceof Exception && "PF02".equals(error.getMessage()))
+                .expectErrorSatisfies(error -> {
+                    assertTrue(error instanceof CommonException);
+                    assertEquals("Empty profile list", error.getMessage());
+                })
                 .verify();
     }
 
