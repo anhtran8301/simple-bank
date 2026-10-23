@@ -1,6 +1,5 @@
 package com.anhtran.accountservice.model;
 
-
 import com.anhtran.accountservice.data.Account;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -43,5 +43,4 @@ public class CommonConfiguration {
 
         return  ReceiverOptions.create(propsReceiver);
     }
-
 }

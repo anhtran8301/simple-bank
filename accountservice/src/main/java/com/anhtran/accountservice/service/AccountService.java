@@ -6,7 +6,6 @@ import com.anhtran.commonservice.common.CommonException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -35,7 +34,8 @@ public class AccountService {
         return accountRepository.findById(id)
                 .map(AccountDTO::entityToModel)
                 .switchIfEmpty(
-                        Mono.error(new CommonException("A01", "Account not found", HttpStatus.NOT_FOUND)));
+                        Mono.error(
+                                new CommonException("A01", "Account not found", HttpStatus.NOT_FOUND))
+                );
     }
-
 }

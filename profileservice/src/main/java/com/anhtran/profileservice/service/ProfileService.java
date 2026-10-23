@@ -39,6 +39,7 @@ public class ProfileService {
                     }
 
                     profileDTO.setStatus(Constant.STATUS_PROFILE_PENDING);
+                    
                     return createProfile(profileDTO);
                 });
     }
