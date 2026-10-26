@@ -58,4 +58,14 @@ public class PaymentService {
                 .doOnError(throwable -> log.error(throwable.getMessage()))
                 .doOnSuccess(paymentDTO1 -> eventProducer.sendPaymentRequest(Constant.PAYMENT_REQUEST_TOPIC, gson.toJson(paymentDTO1)).subscribe());
     }
+
+    public Mono<PaymentDTO> updateStatusPayment(PaymentDTO paymentDTO) {
+        return paymentRepository.findById(paymentDTO.getId())
+                .switchIfEmpty(Mono.error(new CommonException("P03", "Payment not found", HttpStatus.NOT_FOUND)))
+                .flatMap(payment -> {
+                    payment.setStatus(paymentDTO.getStatus());
+                    return paymentRepository.save(payment);
+                })
+                .map(PaymentDTO::entityToDto);
+    }
 }

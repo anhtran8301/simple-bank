@@ -17,6 +17,7 @@ import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.receiver.ReceiverRecord;
 
 import java.util.Collections;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -39,6 +40,11 @@ public class EventConsumer {
                 .receive()
                 .doOnError(e -> log.error("Kafka consumer error: ", e))
                 .subscribe(this::paymentRequest);
+
+        KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PAYMENT_COMPLETED_TOPIC)))
+                .receive()
+                .doOnError(e -> log.error("Kafka consumer error: ", e))
+                .subscribe(this::paymentComplete);
     }
 
     public void profileOnboarding(ReceiverRecord<String,String> receiverRecord){
@@ -66,5 +72,15 @@ public class EventConsumer {
                 throw new CommonException("A02", "Balance not enough", HttpStatus.BAD_REQUEST);
             }
         });
+    }
+
+    public void paymentComplete(ReceiverRecord<String,String> receiverRecord){
+        log.info("Payment complete event");
+        PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
+        if (Objects.equals(paymentDTO.getStatus(), Constant.STATUS_PAYMENT_SUCCESSFUL)) {
+            accountService.subtractAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+        } else {
+            accountService.rollbackReserved(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+        }
     }
 }
