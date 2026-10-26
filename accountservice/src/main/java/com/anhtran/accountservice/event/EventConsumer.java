@@ -3,6 +3,7 @@ package com.anhtran.accountservice.event;
 import com.google.gson.Gson;
 import com.anhtran.accountservice.service.AccountService;
 import com.anhtran.accountservice.model.AccountDTO;
+import com.anhtran.commonservice.model.PaymentDTO;
 import com.anhtran.commonservice.model.ProfileDTO;
 import com.anhtran.commonservice.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,11 @@ public class EventConsumer {
                 .receive()
                 .doOnError(e -> log.error("Kafka consumer error: ", e))
                 .subscribe(this::profileOnboarding);
+
+        KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PAYMENT_REQUEST_TOPIC)))
+                .receive()
+                .doOnError(e -> log.error("Kafka consumer error: ", e))
+                .subscribe(this::paymentRequest);
     }
 
     public void profileOnboarding(ReceiverRecord<String,String> receiverRecord){
@@ -46,5 +52,10 @@ public class EventConsumer {
             dto.setStatus(Constant.STATUS_PROFILE_ACTIVE);
             eventProducer.send(Constant.PROFILE_ONBOARDED_TOPIC,gson.toJson(dto)).subscribe();
         });
+    }
+
+    public void paymentRequest(ReceiverRecord<String,String> receiverRecord){
+        PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
+        accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
     }
 }

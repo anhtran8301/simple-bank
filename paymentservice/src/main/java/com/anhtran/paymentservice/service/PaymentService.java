@@ -9,8 +9,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.anhtran.commonservice.common.CommonException;
 import com.anhtran.commonservice.model.AccountDTO;
 import com.anhtran.commonservice.utils.Constant;
+import com.anhtran.paymentservice.event.EventProducer;
 import com.anhtran.paymentservice.model.PaymentDTO;
 import com.anhtran.paymentservice.repository.PaymentRepository;
+import com.google.gson.Gson;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,8 +22,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    Gson gson = new Gson();
+
     private final PaymentRepository paymentRepository;
     private final WebClient webClientAccount;
+    private final EventProducer eventProducer;
 
     public Flux<PaymentDTO> getAllPayment(String id) {
         return paymentRepository.findByAccountId(id)
@@ -50,6 +55,7 @@ public class PaymentService {
                 .map(PaymentDTO::dtoToEntity)
                 .flatMap(payment -> paymentRepository.save(payment))
                 .map(PaymentDTO::entityToDto)
-                .doOnError(throwable -> log.error(throwable.getMessage()));
+                .doOnError(throwable -> log.error(throwable.getMessage()))
+                .doOnSuccess(paymentDTO1 -> eventProducer.sendPaymentRequest(Constant.PAYMENT_REQUEST_TOPIC, gson.toJson(paymentDTO1)).subscribe());
     }
 }
