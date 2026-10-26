@@ -39,7 +39,7 @@ public class AccountService {
                 .flatMap(account -> {
                     // Kiểm tra để đảm bảo rằng số dư không được nhỏ hơn số tiền đặt chỗ + số tiền đã được đặt chỗ trước đó
                     if (account.getBalance() < account.getReserved() + amount) {
-                        throw new CommonException("A02", "Insufficient balance", HttpStatus.BAD_REQUEST);
+                        return Mono.just(false);
                     }
                     
                     // Set giá trị đặt chỗ mới của account đó

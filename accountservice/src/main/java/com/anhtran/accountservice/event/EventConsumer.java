@@ -3,12 +3,14 @@ package com.anhtran.accountservice.event;
 import com.google.gson.Gson;
 import com.anhtran.accountservice.service.AccountService;
 import com.anhtran.accountservice.model.AccountDTO;
+import com.anhtran.commonservice.common.CommonException;
 import com.anhtran.commonservice.model.PaymentDTO;
 import com.anhtran.commonservice.model.ProfileDTO;
 import com.anhtran.commonservice.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
@@ -50,12 +52,19 @@ public class EventConsumer {
         accountDTO.setCurrency("USD");
         accountService.createNewAccount(accountDTO).subscribe(res ->{
             dto.setStatus(Constant.STATUS_PROFILE_ACTIVE);
-            eventProducer.send(Constant.PROFILE_ONBOARDED_TOPIC,gson.toJson(dto)).subscribe();
+            eventProducer.send(Constant.PROFILE_ONBOARDED_TOPIC, gson.toJson(dto)).subscribe();
         });
     }
 
     public void paymentRequest(ReceiverRecord<String,String> receiverRecord){
         PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
-        accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+        accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe(bookAmountResult -> {
+            if (bookAmountResult) {
+                paymentDTO.setStatus(Constant.STATUS_PAYMENT_PROCESSING);
+                eventProducer.send(Constant.PAYMENT_CREATED_TOPIC, gson.toJson(paymentDTO)).subscribe();
+            } else {
+                throw new CommonException("A02", "Balance not enough", HttpStatus.BAD_REQUEST);
+            }
+        });
     }
 }
