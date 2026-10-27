@@ -16,6 +16,8 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2022.0.0</spring-cloud.version>
+		<sonar.coverage.exclusions>**/model/*,**/ProfileserviceApplication.*</sonar.coverage.exclusions>
+		<sonar.exclusions>src/test/**</sonar.exclusions><sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin><sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis><sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -176,6 +178,11 @@
 					</excludes>
 				</configuration>
 				<executions><execution><id>default</id><goals><goal>prepare-agent</goal></goals></execution><execution><id>default-report</id><phase>prepare-package</phase><goals><goal>report</goal></goals></execution></executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>5.5.0.6356</version>
 			</plugin>
 		</plugins>
 	</build>
