@@ -1,4 +1,4 @@
-# docker compose -f Kafka-compose.yml up -d
+# docker compose -f docker-compose.yml up -d
 version: '2'
 services:
   zookeeper:
